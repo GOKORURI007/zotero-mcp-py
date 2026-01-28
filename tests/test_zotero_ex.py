@@ -143,3 +143,52 @@ class TestZoteroEx:
         # 测试任何集合名称都应该返回 None
         assert self.zotero_ex.get_collection_key_by_name('A.Project') is None
         assert self.zotero_ex.get_collection_key_by_name('Some Collection') is None
+
+    @patch.object(ZoteroEx, '_check_backoff')
+    @patch.object(ZoteroEx, '_set_backoff')
+    @patch('src.zotero_ex.build_url')
+    def test_get_selected_collection_success(
+        self, mock_build_url, mock_set_backoff, mock_check_backoff
+    ):
+        """测试get_selected_collection方法成功获取选中集合信息"""
+        # 设置模拟构建的 URL
+        expected_url = 'http://fake.url/plus/selected-collection'
+        mock_build_url.return_value = expected_url
+
+        # 创建模拟响应
+        mock_response = Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {
+            'key': 'SELECTED1',
+            'data': {'name': '当前选中集合', 'type': 'collection'}
+        }
+        mock_response.headers = {}
+
+        # 替换 client 对象
+        original_client = self.zotero_ex.client
+        mock_client = Mock()
+        mock_client.get.return_value = mock_response
+        self.zotero_ex.client = mock_client
+
+        # 调用被测试方法
+        result = self.zotero_ex.get_selected_collection()
+
+        # 验证结果
+        assert result == {
+            'key': 'SELECTED1',
+            'data': {'name': '当前选中集合', 'type': 'collection'}
+        }
+
+        # 验证是否调用了 get 方法
+        mock_client.get.assert_called_once()
+        args, kwargs = mock_client.get.call_args
+
+        # 验证 URL 和请求头
+        assert 'plus/selected-collection' in kwargs['url']
+        assert kwargs['headers']['Content-Type'] == 'application/json'
+
+        # 验证 request 属性是否被设置
+        assert self.zotero_ex.request == mock_response
+
+        # 恢复原始 client
+        self.zotero_ex.client = original_client

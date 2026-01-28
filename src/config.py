@@ -1,1 +1,1 @@
-ZOTERO_PORT = 23119
+ENDPOINT: str = 'http://localhost:23119/api'
