@@ -1,10 +1,9 @@
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
 from src.zotero_ex import ZoteroEx
 
 
 class TestZoteroEx:
-
     def setup_method(self):
         """设置测试环境"""
         self.zotero_ex = ZoteroEx(library_id='12345', library_type='user', api_key='fake_api_key')
@@ -15,30 +14,10 @@ class TestZoteroEx:
         # 模拟 collections 方法的返回值
         # 注意：key 在顶层，name 在 data 内部，符合实际 API 返回格式
         mock_collections.return_value = [
-            {
-                'key': 'AAAAAAA1',
-                'data': {
-                    'name': 'A.Project'
-                }
-            },
-            {
-                'key': 'BBBBBBB2',
-                'data': {
-                    'name': '我的出版物'
-                }
-            },
-            {
-                'key': 'CCCCCCC3',
-                'data': {
-                    'name': '审稿'
-                }
-            },
-            {
-                'key': 'DDDDDDD4',
-                'data': {
-                    'name': '未分类条目'
-                }
-            }
+            {'key': 'AAAAAAA1', 'data': {'name': 'A.Project'}},
+            {'key': 'BBBBBBB2', 'data': {'name': '我的出版物'}},
+            {'key': 'CCCCCCC3', 'data': {'name': '审稿'}},
+            {'key': 'DDDDDDD4', 'data': {'name': '未分类条目'}},
         ]
 
         # 测试各个集合名称
@@ -51,14 +30,7 @@ class TestZoteroEx:
     def test_get_collection_key_by_name_not_found(self, mock_collections):
         """测试当集合不存在时返回None"""
         # 模拟 collections 方法的返回值
-        mock_collections.return_value = [
-            {
-                'key': 'AAAAAAA1',
-                'data': {
-                    'name': 'A.Project'
-                }
-            }
-        ]
+        mock_collections.return_value = [{'key': 'AAAAAAA1', 'data': {'name': 'A.Project'}}]
 
         # 测试不存在的集合名称
         assert self.zotero_ex.get_collection_key_by_name('不存在的集合') is None
@@ -69,8 +41,9 @@ class TestZoteroEx:
     @patch.object(ZoteroEx, '_set_backoff')
     @patch('src.zotero_ex.token')
     @patch('src.zotero_ex.build_url')
-    def test_add_items_by_identifier_success(self, mock_build_url, mock_token, mock_set_backoff,
-                                             mock_check_backoff):
+    def test_add_items_by_identifier_success(
+        self, mock_build_url, mock_token, mock_set_backoff, mock_check_backoff
+    ):
         """测试add_items_by_identifier方法成功添加项目"""
         # 设置模拟构建的 URL
         expected_url = 'http://fake.url/plus/add-item-by-id'
@@ -90,8 +63,9 @@ class TestZoteroEx:
         self.zotero_ex.client = mock_client
 
         # 调用被测试方法
-        result = self.zotero_ex.add_items_by_identifier(identifier='10.1000/example.doi',
-                                                        collection_key='AAAAAAA1')
+        result = self.zotero_ex.add_items_by_identifier(
+            identifier='10.1000/example.doi', collection_key='AAAAAAA1'
+        )
 
         # 验证结果
         assert result == {'success': True, 'items': ['item1']}
@@ -115,8 +89,9 @@ class TestZoteroEx:
     @patch.object(ZoteroEx, '_set_backoff')
     @patch('src.zotero_ex.token')
     @patch('src.zotero_ex.build_url')
-    def test_add_items_by_identifier_with_last_modified(self, mock_build_url, mock_token,
-                                                        mock_set_backoff, mock_check_backoff):
+    def test_add_items_by_identifier_with_last_modified(
+        self, mock_build_url, mock_token, mock_set_backoff, mock_check_backoff
+    ):
         """测试add_items_by_identifier方法带有last_modified参数"""
         # 设置模拟构建的 URL
         expected_url = 'http://fake.url/plus/add-item-by-id'
@@ -137,9 +112,7 @@ class TestZoteroEx:
 
         # 调用被测试方法，带 last_modified 参数
         result = self.zotero_ex.add_items_by_identifier(
-            identifier='10.1000/example.doi',
-            collection_key='AAAAAAA1',
-            last_modified=12345
+            identifier='10.1000/example.doi', collection_key='AAAAAAA1', last_modified=12345
         )
 
         # 验证结果

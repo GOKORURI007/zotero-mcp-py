@@ -1,8 +1,8 @@
-import json
 from typing import Literal
 
 import httpx
-from pyzotero import errors as ze, Zotero
+from pyzotero import Zotero
+from pyzotero import errors as ze
 from pyzotero._utils import build_url, get_backoff_duration, token
 
 from src.models import AddByIDPayload
@@ -25,35 +25,23 @@ class ZoteroEx(Zotero):
         client: httpx.Client = None,
     ):
         super().__init__(
-            library_id,
-            library_type,
-            api_key,
-            preserve_json_order,
-            locale,
-            local,
-            client
+            library_id, library_type, api_key, preserve_json_order, locale, local, client
         )
 
-    def add_items_by_identifier(
-        self,
-        identifier: str,
-        collection_key: str,
-        last_modified=None
-    ):
-        headers = {"Zotero-Write-Token": token(), "Content-Type": "application/json"}
+    def add_items_by_identifier(self, identifier: str, collection_key: str, last_modified=None):
+        headers = {'Zotero-Write-Token': token(), 'Content-Type': 'application/json'}
         if last_modified is not None:
-            headers["If-Unmodified-Since-Version"] = str(last_modified)
+            headers['If-Unmodified-Since-Version'] = str(last_modified)
         self._check_backoff()
 
         payload = AddByIDPayload(
-            identifier=identifier,
-            collectionKey=collection_key
+            identifier=identifier, collectionKey=collection_key
         ).model_dump_json()
 
         req = self.client.post(
             url=build_url(
                 self.endpoint,
-                f"/plus/add-item-by-id",
+                '/plus/add-item-by-id',
             ),
             content=payload,
             headers=headers,

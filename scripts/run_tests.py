@@ -1,48 +1,33 @@
-#!/usr/bin/env python
-"""运行测试脚本"""
-
-import subprocess
+#!/usr/bin/env python3
 import sys
 from pathlib import Path
 
-
-def run_command(cmd: list[str], description: str) -> bool:
-    """执行命令并返回是否成功"""
-    print(f'\n{"=" * 60}')
-    print(f'{description}')
-    print(f'{"=" * 60}')
-
-    try:
-        result = subprocess.run(cmd, check=True, capture_output=False, text=True)
-        return result.returncode == 0
-    except subprocess.CalledProcessError as e:
-        print(f'错误: 命令执行失败 (退出码: {e.returncode})', file=sys.stderr)
-        return False
-    except FileNotFoundError:
-        print(f"错误: 找不到命令 '{cmd[0]}'，请确保已安装 pytest", file=sys.stderr)
-        print("提示: 运行 'pip install pytest' 或 'uv add --dev pytest' 安装", file=sys.stderr)
-        return False
+import pytest
 
 
-def main() -> int:
-    """主函数"""
-    # 切换到项目根目录
-    project_root = Path(__file__).parent.parent
+def main():
+    # 1. 路径自动定位
+    project_root = Path(__file__).resolve().parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
 
-    print(f'项目目录: {project_root}')
-    print(f'当前Python: {sys.executable}')
+    # 2. 定义默认参数
+    # 如果用户没传参数，就用你给出的这一串“全家桶”
+    if len(sys.argv) <= 1:
+        args = ['--cov=src/', '--cov-report=html', 'tests/']
+        print('📊 运行默认测试套件 (含覆盖率报告)...')
+    else:
+        # 如果用户传了参数（如 ./run_test.py tests/my_test.py），则以用户为准
+        args = sys.argv[1:]
+        print(f'🛠️ 运行自定义测试: {" ".join(args)}')
 
-    # 构建 pytest 命令
-    pytest_args = ['pytest'] + sys.argv[1:]  # 支持传递额外参数
+    # 3. 执行
+    exit_code = pytest.main(args)
 
-    # 运行测试
-    if not run_command(pytest_args, '运行测试'):
-        return 1
+    if exit_code == 0:
+        print('\n✨ ✅ 测试全部通过！报告已生成在 htmlcov/ 目录。')
 
-    print('\n' + '=' * 60)
-    print('✅ 测试完成!')
-    print('=' * 60)
-    return 0
+    return exit_code
 
 
 if __name__ == '__main__':

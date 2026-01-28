@@ -1,8 +1,5 @@
 import os
 
-import httpx
-from pyzotero import Zotero
-
 from src.zotero_ex import ZoteroEx
 
 
@@ -21,10 +18,7 @@ def main():
         zot.all_collections()
         print('正在获取数据...')
         try:
-            zot.add_items_by_identifier(
-                'https://doi.org/10.1109/CVPR52733.2024.01770',
-                'WVNC398Z'
-            )
+            zot.add_items_by_identifier('https://doi.org/10.1109/CVPR52733.2024.01770', 'WVNC398Z')
         except Exception as e:
             print(e)
             raise
