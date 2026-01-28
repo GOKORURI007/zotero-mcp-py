@@ -11,11 +11,12 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=9.0.2",
+    "pytest-sugar>=1.1.1",
+    "pytest-cov>=7.0.0",
+    "pytest-dependency>=0.6.0",
     "ruff>=0.14.14",
 ]
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
 
 [tool.ruff]
 preview = true

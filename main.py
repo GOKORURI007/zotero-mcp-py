@@ -18,7 +18,7 @@ def main():
     try:
         print('正在连接本地Zotero...')
         zot = ZoteroEx()
-
+        zot.all_collections()
         print('正在获取数据...')
         try:
             zot.add_items_by_identifier(

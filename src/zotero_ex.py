@@ -69,3 +69,25 @@ class ZoteroEx(Zotero):
         if backoff:
             self._set_backoff(backoff)
         return resp
+
+    def get_collection_key_by_name(self, collection_name: str):
+        """
+        根据集合名称获取集合的 key
+
+        Args:
+            collection_name (str): 集合名称
+
+        Returns:
+            str or None: 如果找到则返回集合的 key，否则返回 None
+        """
+
+        # 获取所有集合
+        collections = self.collections()
+
+        # 遍历查找匹配的集合名称
+        for collection in collections:
+            if collection.get('data', {}).get('name') == collection_name:
+                return collection.get('key')
+
+        # 如果没有找到匹配的集合，返回 None
+        return None
