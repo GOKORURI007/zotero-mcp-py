@@ -1,6 +1,7 @@
 from typing import Literal
 
 import httpx
+from loguru import logger
 from pyzotero import Zotero
 from pyzotero import errors as ze
 from pyzotero._utils import build_url, get_backoff_duration, token
@@ -33,35 +34,64 @@ class ZoteroEx(Zotero):
 
     def add_items_by_identifier(
         self, identifier: str, collection_key: str, last_modified=None
-    ) -> dict[str, str | list[str]]:
+    ) -> httpx.Response:
+        # 1. 记录入参
+        logger.debug(f'🚀 Preparing to add item. ID: {identifier}, Collection: {collection_key}')
+
         headers = {'Zotero-Write-Token': token(), 'Content-Type': 'application/json'}
         if last_modified is not None:
             headers['If-Unmodified-Since-Version'] = str(last_modified)
+            logger.debug(f'Using If-Unmodified-Since-Version: {last_modified}')
+
         self._check_backoff()
 
         payload = AddByIDPayload(
             identifier=identifier, collectionKey=collection_key
         ).model_dump_json()
 
-        req = self.client.post(
-            url=build_url(
-                self.endpoint,
-                '/plus/add-item-by-id',
-            ),
-            content=payload,
-            headers=headers,
-        )
-        self.request = req
+        url = build_url(self.endpoint, '/plus/add-item-by-id')
+
+        # 2. 记录请求详情（非常关键，检查端口和路径是否正确）
+        logger.debug(f'Sending POST request to: {url}')
+        logger.debug(f'Payload: {payload}')
 
         try:
-            req.raise_for_status()
-        except httpx.HTTPError as exc:
-            ze.error_handler(self, req, exc)
-        resp = req.json()
-        backoff = get_backoff_duration(self.request.headers)
-        if backoff:
-            self._set_backoff(backoff)
-        return resp
+            req = self.client.post(
+                url=url,
+                content=payload,
+                headers=headers,
+                timeout=30,
+            )
+            self.request = req
+
+            # 3. 记录响应状态码
+            logger.debug(f'📥 Received Response - Status: {req.status_code}')
+
+            try:
+                req.raise_for_status()
+            except httpx.HTTPError as exc:
+                # 在错误处理器之前记录原始错误内容
+                logger.error(f'❌ HTTP Error Occurred: {exc}')
+                logger.error(f'Error Response Body: {req.text}')
+                ze.error_handler(self, req, exc)
+                # 即使 error_handler 没抛出异常，最好也返回状态
+                return req
+
+            resp = req.json()
+
+            # 4. 记录成功返回的数据摘要
+            logger.debug(f'✅ Success. Added items: {resp.get("addedCount", 0)}')
+
+            backoff = get_backoff_duration(self.request.headers)
+            if backoff:
+                logger.warning(f'⚠️ Backoff detected: Waiting for {backoff}s')
+                self._set_backoff(backoff)
+
+            return req
+
+        except Exception as e:
+            logger.exception(f'🚫 Unexpected failure in add_items_by_identifier: {str(e)}')
+            raise
 
     def get_collection_key_by_name(self, collection_name: str) -> str | None:
         """

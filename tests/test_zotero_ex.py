@@ -68,7 +68,7 @@ class TestZoteroEx:
         )
 
         # 验证结果
-        assert result == {'success': True, 'items': ['item1']}
+        assert result.json() == {'success': True, 'items': ['item1']}
 
         # 验证是否调用了 post 方法
         mock_client.post.assert_called_once()
@@ -116,7 +116,7 @@ class TestZoteroEx:
         )
 
         # 验证结果
-        assert result == {'success': True, 'items': ['item1']}
+        assert result.json() == {'success': True, 'items': ['item1']}
 
         # 验证是否调用了 post 方法
         mock_client.post.assert_called_once()
@@ -160,7 +160,7 @@ class TestZoteroEx:
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             'key': 'SELECTED1',
-            'data': {'name': '当前选中集合', 'type': 'collection'}
+            'data': {'name': '当前选中集合', 'type': 'collection'},
         }
         mock_response.headers = {}
 
@@ -176,7 +176,7 @@ class TestZoteroEx:
         # 验证结果
         assert result == {
             'key': 'SELECTED1',
-            'data': {'name': '当前选中集合', 'type': 'collection'}
+            'data': {'name': '当前选中集合', 'type': 'collection'},
         }
 
         # 验证是否调用了 get 方法
