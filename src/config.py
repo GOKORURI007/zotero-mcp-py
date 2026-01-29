@@ -11,7 +11,7 @@ LOGGER_NAME: str = 'ZoteroMCP'
 # 日志文件夹
 LOG_DIR: Path = Path.cwd() / 'logs'
 # 日志文件名
-LOG_FILE: str = 'dy_spider.log'
+LOG_FILE: str = 'zotero_mcp.log'
 # 文件输出日志级别
 LOG_LEVEL_FILE: LogLevel = 'INFO'
 # 标准输出日志级别
